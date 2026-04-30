@@ -122,44 +122,44 @@
 
 ## Multi-Account System (NEW)
 
-### Phase 8: Database & Account Management
-- [ ] Create accounts table with id, userId, name, type, institution, color
-- [ ] Generate and apply database migration
-- [ ] Add account CRUD query functions to db.ts
-- [ ] Add account tRPC procedures (list, create, update, delete)
-- [ ] Create Accounts management page with account cards
-- [ ] Add colored account cards with edit/delete buttons
-- [ ] Show setup prompt when no accounts exist
+### Phase 8: Database & Account Management (COMPLETED)
+- [x] Create accounts table with id, userId, name, type, institution, color
+- [x] Generate and apply database migration
+- [x] Add account CRUD query functions to db.ts
+- [x] Add account tRPC procedures (list, create, update, delete)
+- [x] Create Accounts management page with account cards
+- [x] Add colored account cards with edit/delete buttons
+- [x] Show setup prompt when no accounts exist
 
 ### Phase 9: Link Accounts to Transactions
-- [ ] Add accountId field to expenses table
-- [ ] Add accountId field to income table
-- [ ] Generate and apply migrations
-- [ ] Update expense form to include account dropdown
-- [ ] Update income form to include account dropdown
-- [ ] Update expense/income create procedures to accept accountId
-- [ ] Update database queries to handle accountId
+- [x] Add accountId field to expenses table
+- [x] Add accountId field to income table
+- [x] Generate and apply migrations
+- [x] Update expense form to include account dropdown
+- [x] Update income form to include account dropdown
+- [x] Update expense/income create procedures to accept accountId
+- [x] Update database queries to handle accountId
 
 ### Phase 10: Account Filtering
-- [ ] Add account filter dropdown to Expenses page
-- [ ] Add account filter dropdown to Income page
-- [ ] Add account filter dropdown to Dashboard
-- [ ] Update queries to filter by accountId
-- [ ] Show "All Accounts" option in filters
+- [x] Add account filter dropdown to Expenses page
+- [x] Add account filter dropdown to Income page
+- [x] Add account filter dropdown to Dashboard
+- [x] Update queries to filter by accountId
+- [x] Show "All Accounts" option in filters
 
 ### Phase 11: Dashboard & Bank Import Updates
-- [ ] Add Dashboard account summary section
-- [ ] Show each account as card with income/expenses/balance
-- [ ] Update bank import flow to ask for account selection
-- [ ] Link imported transactions to selected account
-- [ ] Update import procedures to set accountId
+- [x] Add Dashboard account summary section
+- [x] Show each account as card with income/expenses/balance
+- [x] Update bank import flow to ask for account selection
+- [x] Link imported transactions to selected account
+- [x] Update import procedures to set accountId
 
 ### Phase 12: Testing & Deployment
-- [ ] Write tests for account CRUD operations
-- [ ] Write tests for account filtering
-- [ ] Write tests for multi-account transactions
-- [ ] Verify all features end-to-end
-- [ ] Commit and push to GitHub
+- [x] Write tests for account CRUD operations
+- [x] Write tests for account filtering
+- [x] Write tests for multi-account transactions
+- [x] Verify all features end-to-end
+- [x] Commit and push to GitHub
 
 
 ## Multi-Account System (Incremental Implementation)
