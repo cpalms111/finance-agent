@@ -28,9 +28,9 @@ export const appRouter = router({
         return expenseList;
       }),
     create: protectedProcedure
-      .input(z.object({ amount: z.string(), category: z.string(), description: z.string().nullable(), date: z.date() }))
+      .input(z.object({ amount: z.string(), category: z.string(), description: z.string().nullable(), date: z.date(), accountId: z.number().optional() }))
       .mutation(async ({ ctx, input }) => {
-        return db.createExpense(ctx.user.id, input.amount, input.category, input.description, input.date);
+        return db.createExpense(ctx.user.id, input.amount, input.category, input.description, input.date, input.accountId);
       }),
     update: protectedProcedure
       .input(z.object({ id: z.number(), amount: z.string().optional(), category: z.string().optional(), description: z.string().nullable().optional(), date: z.date().optional() }))
@@ -90,9 +90,9 @@ export const appRouter = router({
         return db.getUserIncomeRecords(ctx.user.id, input.startDate, input.endDate);
       }),
     create: protectedProcedure
-      .input(z.object({ amount: z.string(), source: z.string().optional(), date: z.date(), notes: z.string().optional() }))
+      .input(z.object({ amount: z.string(), source: z.string().optional(), date: z.date().optional(), description: z.string().optional(), accountId: z.number().optional() }))
       .mutation(async ({ ctx, input }) => {
-        return db.createIncomeRecord(ctx.user.id, input.amount, input.source, input.date, input.notes);
+        return db.createIncomeRecord(ctx.user.id, input.amount, input.source, input.date, input.description, input.accountId);
       }),
     delete: protectedProcedure
       .input(z.object({ id: z.number() }))

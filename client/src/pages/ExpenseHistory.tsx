@@ -15,6 +15,7 @@ const EXPENSE_CATEGORIES = ["food", "transport", "utilities", "entertainment", "
 export default function ExpenseHistory() {
   const [, setLocation] = useLocation();
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
+  const [selectedAccount, setSelectedAccount] = useState<number | undefined>();
   const [startDate, setStartDate] = useState(format(startOfMonth(new Date()), "yyyy-MM-dd"));
   const [endDate, setEndDate] = useState(format(endOfMonth(new Date()), "yyyy-MM-dd"));
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -26,7 +27,11 @@ export default function ExpenseHistory() {
     category: "food",
     description: "",
     date: format(new Date(), "yyyy-MM-dd"),
+    accountId: undefined as number | undefined,
   });
+
+  // Fetch accounts
+  const { data: accounts = [] } = trpc.accounts.list.useQuery();
 
   // Fetch expenses
   const { data: expenses = [], refetch } = trpc.expenses.list.useQuery({
@@ -40,7 +45,7 @@ export default function ExpenseHistory() {
     onSuccess: () => {
       toast.success("Expense added successfully");
       refetch();
-      setFormData({ amount: "", category: "food", description: "", date: format(new Date(), "yyyy-MM-dd") });
+      setFormData({ amount: "", category: "food", description: "", date: format(new Date(), "yyyy-MM-dd"), accountId: undefined });
       setIsAddOpen(false);
     },
     onError: () => toast.error("Failed to add expense"),
@@ -65,6 +70,7 @@ export default function ExpenseHistory() {
       category: formData.category,
       description: formData.description || null,
       date: new Date(formData.date),
+      accountId: formData.accountId,
     });
   };
 
@@ -140,6 +146,24 @@ export default function ExpenseHistory() {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
+              {accounts.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium">Account (Optional)</label>
+                  <Select value={formData.accountId?.toString() || "none"} onValueChange={(value) => setFormData({ ...formData, accountId: value === "none" ? undefined : parseInt(value) })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Account</SelectItem>
+                      {accounts.map((account) => (
+                        <SelectItem key={account.id} value={account.id.toString()}>
+                          {account.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <Button onClick={handleAddExpense} className="w-full" disabled={createMutation.isPending}>
                 {createMutation.isPending ? "Adding..." : "Add Expense"}
               </Button>
@@ -155,7 +179,7 @@ export default function ExpenseHistory() {
           <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="text-sm font-medium">Start Date</label>
               <Input
@@ -188,6 +212,24 @@ export default function ExpenseHistory() {
                 </SelectContent>
               </Select>
             </div>
+            {accounts.length > 0 && (
+              <div>
+                <label className="text-sm font-medium">Account</label>
+                <Select value={selectedAccount?.toString() || "all"} onValueChange={(value) => setSelectedAccount(value === "all" ? undefined : parseInt(value))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All accounts" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All accounts</SelectItem>
+                    {accounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id.toString()}>
+                        {account.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

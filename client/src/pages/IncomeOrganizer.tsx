@@ -10,12 +10,17 @@ import { toast } from "sonner";
 
 export default function IncomeOrganizer() {
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<number | undefined>();
   const [formData, setFormData] = useState({
     amount: "",
     source: "",
     date: format(new Date(), "yyyy-MM-dd"),
     notes: "",
+    accountId: undefined as number | undefined,
   });
+
+  // Fetch accounts
+  const { data: accounts = [] } = trpc.accounts.list.useQuery();
 
   const currentMonth = format(new Date(), "yyyy-MM");
   const startDate = startOfMonth(new Date());
@@ -32,7 +37,7 @@ export default function IncomeOrganizer() {
     onSuccess: () => {
       toast.success("Income recorded");
       refetch();
-      setFormData({ amount: "", source: "", date: format(new Date(), "yyyy-MM-dd"), notes: "" });
+      setFormData({ amount: "", source: "", date: format(new Date(), "yyyy-MM-dd"), notes: "", accountId: undefined });
       setIsAddOpen(false);
     },
     onError: () => toast.error("Failed to record income"),
@@ -56,7 +61,8 @@ export default function IncomeOrganizer() {
       amount: formData.amount,
       source: formData.source || undefined,
       date: new Date(formData.date),
-      notes: formData.notes || undefined,
+      description: formData.notes || undefined,
+      accountId: formData.accountId,
     });
   };
 
@@ -137,6 +143,23 @@ export default function IncomeOrganizer() {
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 />
               </div>
+              {accounts.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium">Account (Optional)</label>
+                  <select
+                    value={formData.accountId?.toString() || ""}
+                    onChange={(e) => setFormData({ ...formData, accountId: e.target.value ? parseInt(e.target.value) : undefined })}
+                    className="w-full px-3 py-2 border border-input rounded-md text-sm"
+                  >
+                    <option value="">No Account</option>
+                    {accounts.map((account) => (
+                      <option key={account.id} value={account.id.toString()}>
+                        {account.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <Button onClick={handleAddIncome} className="w-full" disabled={createMutation.isPending}>
                 {createMutation.isPending ? "Recording..." : "Record Income"}
               </Button>

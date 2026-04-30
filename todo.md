@@ -176,19 +176,19 @@
 - [x] All 14 tests passing for account CRUD operations
 
 ### Phase 2: Add accountId to Transactions (Backward Compatible)
-- [ ] Add optional accountId field to expenses table
-- [ ] Add optional accountId field to income table
-- [ ] Generate database migrations
-- [ ] Update createExpense function to accept optional accountId
-- [ ] Update createIncomeRecord function to accept optional accountId
-- [ ] Verify existing expense/income creation still works without accountId
+- [x] Add optional accountId field to expenses table
+- [x] Add optional accountId field to income table
+- [x] Generate database migrations
+- [x] Update createExpense function to accept optional accountId
+- [x] Update createIncomeRecord function to accept optional accountId
+- [x] Verify existing expense/income creation still works without accountId
 
 ### Phase 3: Update Transaction Forms
-- [ ] Update expense form to include account dropdown
-- [ ] Update income form to include account dropdown
-- [ ] Make account selection required in forms
-- [ ] Update expense/income procedures to handle accountId
-- [ ] Test that new transactions are created with accountId
+- [x] Update expense form to include account dropdown
+- [x] Update income form to include account dropdown
+- [x] Make account selection optional in forms (backward compatible)
+- [x] Update expense/income procedures to handle accountId
+- [x] Test that new transactions are created with accountId
 
 ### Phase 4: Add Account Filters
 - [ ] Add account filter dropdown to Expenses page

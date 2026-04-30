@@ -32,6 +32,7 @@ export type InsertUser = typeof users.$inferInsert;
 export const expenses = mysqlTable("expenses", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
+  accountId: int("accountId"), // Optional: links to accounts table for multi-account support
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   category: varchar("category", { length: 64 }).notNull(), // e.g., "food", "transport", "utilities"
   description: text("description"),
@@ -86,6 +87,7 @@ export type InsertSavingsGoal = typeof savingsGoals.$inferInsert;
 export const incomeRecords = mysqlTable("incomeRecords", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
+  accountId: int("accountId"), // Optional: links to accounts table for multi-account support
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   source: varchar("source", { length: 255 }).notNull(), // e.g., "salary", "freelance"
   description: text("description"),

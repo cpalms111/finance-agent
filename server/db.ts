@@ -121,12 +121,13 @@ export async function getUserExpenses(userId: number, startDate?: Date, endDate?
   return db.select().from(expenses).where(and(...conditions)).orderBy(desc(expenses.date));
 }
 
-export async function createExpense(userId: number, amount: string, category: string, description: string | null, date: Date) {
+export async function createExpense(userId: number, amount: string, category: string, description: string | null, date: Date, accountId?: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
   const result = await db.insert(expenses).values({
     userId,
+    accountId,
     amount,
     category,
     description,
@@ -240,11 +241,11 @@ export async function getUserIncomeRecords(userId: number, startDate?: Date, end
   return db.select().from(incomeRecords).where(and(...conditions)).orderBy(desc(incomeRecords.date));
 }
 
-export async function createIncomeRecord(userId: number, amount: string, source?: string, date?: Date, description?: string) {
+export async function createIncomeRecord(userId: number, amount: string, source?: string, date?: Date, description?: string, accountId?: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  return db.insert(incomeRecords).values({ userId, amount, source: source || "Other", date: date || new Date(), description });
+  return db.insert(incomeRecords).values({ userId, accountId, amount, source: source || "Other", date: date || new Date(), description });
 }
 
 export async function deleteIncomeRecord(id: number, userId: number) {
