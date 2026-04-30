@@ -38,6 +38,7 @@ export default function ExpenseHistory() {
     startDate: new Date(startDate),
     endDate: new Date(endDate),
     category: selectedCategory,
+    accountId: selectedAccount,
   });
 
   // Mutations

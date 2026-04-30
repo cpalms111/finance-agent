@@ -22,9 +22,9 @@ export const appRouter = router({
 
   expenses: router({
     list: protectedProcedure
-      .input(z.object({ startDate: z.date().optional(), endDate: z.date().optional(), category: z.string().optional() }))
+      .input(z.object({ startDate: z.date().optional(), endDate: z.date().optional(), category: z.string().optional(), accountId: z.number().optional() }))
       .query(async ({ ctx, input }) => {
-        const expenseList = await db.getUserExpenses(ctx.user.id, input.startDate, input.endDate, input.category);
+        const expenseList = await db.getUserExpenses(ctx.user.id, input.startDate, input.endDate, input.category, input.accountId);
         return expenseList;
       }),
     create: protectedProcedure
@@ -85,9 +85,9 @@ export const appRouter = router({
 
   income: router({
     list: protectedProcedure
-      .input(z.object({ startDate: z.date().optional(), endDate: z.date().optional() }))
+      .input(z.object({ startDate: z.date().optional(), endDate: z.date().optional(), accountId: z.number().optional() }))
       .query(async ({ ctx, input }) => {
-        return db.getUserIncomeRecords(ctx.user.id, input.startDate, input.endDate);
+        return db.getUserIncomeRecords(ctx.user.id, input.startDate, input.endDate, input.accountId);
       }),
     create: protectedProcedure
       .input(z.object({ amount: z.string(), source: z.string().optional(), date: z.date().optional(), description: z.string().optional(), accountId: z.number().optional() }))
@@ -276,6 +276,7 @@ Respond with a JSON array where each object has: description (original), categor
         description: z.string(),
         amount: z.string(),
         category: z.string(),
+        accountId: z.number().optional(),
       })))
       .mutation(async ({ ctx, input }) => {
         const results = [];
@@ -285,7 +286,8 @@ Respond with a JSON array where each object has: description (original), categor
             tx.amount,
             tx.category,
             tx.description,
-            new Date(tx.date)
+            new Date(tx.date),
+            tx.accountId
           );
           results.push(result);
         }

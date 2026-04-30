@@ -191,24 +191,25 @@
 - [x] Test that new transactions are created with accountId
 
 ### Phase 4: Add Account Filters
-- [ ] Add account filter dropdown to Expenses page
-- [ ] Add account filter dropdown to Income page
-- [ ] Add account filter dropdown to Dashboard
-- [ ] Update queries to filter by accountId when selected
-- [ ] Show "All Accounts" option in filters
-- [ ] Test filtering works correctly
+- [x] Add account filter dropdown to Expenses page
+- [x] Add account filter dropdown to Income page
+- [x] Add account filter dropdown to Dashboard (prepared for Phase 5)
+- [x] Update queries to filter by accountId when selected
+- [x] Show "All Accounts" option in filters
+- [x] Test filtering works correctly
 
 ### Phase 5: Bank Import Integration
-- [ ] Update bank import flow to ask for account selection
-- [ ] Link imported transactions to selected account
-- [ ] Update import procedures to set accountId
-- [ ] Test CSV import with account selection
+- [x] Update bank import flow to ask for account selection
+- [x] Link imported transactions to selected account
+- [x] Update import procedures to set accountId
+- [x] Test CSV import with account selection
+- [x] Add no-accounts empty state to BankImport
 
 ### Phase 6: Dashboard Account Summary
-- [ ] Add Dashboard account summary section
-- [ ] Show each account as card with income/expenses/balance
-- [ ] Display account color and type
-- [ ] Test summary displays correctly
+- [x] Add Dashboard account summary section
+- [x] Show each account as card with income/expenses/balance
+- [x] Display account color and type
+- [x] Test summary displays correctly
 
 ### Phase 7: Testing & Deployment
 - [ ] Write tests for account CRUD operations

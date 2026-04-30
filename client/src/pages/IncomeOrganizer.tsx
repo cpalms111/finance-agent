@@ -30,6 +30,7 @@ export default function IncomeOrganizer() {
   const { data: incomeRecords = [], refetch } = trpc.income.list.useQuery({
     startDate,
     endDate,
+    accountId: selectedAccount,
   });
 
   // Mutations
@@ -167,6 +168,29 @@ export default function IncomeOrganizer() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Account Filter */}
+      {accounts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Filter by Account</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <select
+              value={selectedAccount?.toString() || "all"}
+              onChange={(e) => setSelectedAccount(e.target.value === "all" ? undefined : parseInt(e.target.value))}
+              className="w-full px-3 py-2 border border-input rounded-md text-sm"
+            >
+              <option value="all">All accounts</option>
+              {accounts.map((account) => (
+                <option key={account.id} value={account.id.toString()}>
+                  {account.name}
+                </option>
+              ))}
+            </select>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -102,7 +102,7 @@ export async function getUserById(id: number) {
 }
 
 // Expense queries
-export async function getUserExpenses(userId: number, startDate?: Date, endDate?: Date, category?: string) {
+export async function getUserExpenses(userId: number, startDate?: Date, endDate?: Date, category?: string, accountId?: number) {
   const db = await getDb();
   if (!db) return [];
 
@@ -116,6 +116,9 @@ export async function getUserExpenses(userId: number, startDate?: Date, endDate?
   }
   if (category) {
     conditions.push(eq(expenses.category, category));
+  }
+  if (accountId !== undefined) {
+    conditions.push(eq(expenses.accountId, accountId));
   }
 
   return db.select().from(expenses).where(and(...conditions)).orderBy(desc(expenses.date));
@@ -225,7 +228,7 @@ export async function deleteSavingsGoal(id: number, userId: number) {
 }
 
 // Income records queries
-export async function getUserIncomeRecords(userId: number, startDate?: Date, endDate?: Date) {
+export async function getUserIncomeRecords(userId: number, startDate?: Date, endDate?: Date, accountId?: number) {
   const db = await getDb();
   if (!db) return [];
 
@@ -236,6 +239,9 @@ export async function getUserIncomeRecords(userId: number, startDate?: Date, end
   }
   if (endDate) {
     conditions.push(lte(incomeRecords.date, endDate));
+  }
+  if (accountId !== undefined) {
+    conditions.push(eq(incomeRecords.accountId, accountId));
   }
 
   return db.select().from(incomeRecords).where(and(...conditions)).orderBy(desc(incomeRecords.date));

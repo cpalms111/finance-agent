@@ -9,6 +9,9 @@ export default function Dashboard() {
   const startDate = startOfMonth(new Date());
   const endDate = endOfMonth(new Date());
 
+  // Fetch accounts
+  const { data: accounts = [] } = trpc.accounts.list.useQuery();
+
   // Fetch expenses for current month
   const { data: expenses = [] } = trpc.expenses.list.useQuery({
     startDate,
@@ -97,6 +100,49 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Account Summary */}
+      {accounts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Account Summary</CardTitle>
+            <CardDescription>Overview of your accounts</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {accounts.map((account) => {
+                const accountExpenses = expenses.filter(e => e.accountId === account.id);
+                const accountIncome = income.filter(i => i.accountId === account.id);
+                const totalIncome = accountIncome.reduce((sum, i) => sum + parseFloat(i.amount), 0);
+                const totalExpenses = accountExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+                const accountBalance = totalIncome - totalExpenses;
+                return (
+                  <div key={account.id} className="p-4 border rounded-lg" style={{ borderLeftColor: account.color, borderLeftWidth: '4px' }}>
+                    <h3 className="font-semibold text-sm mb-1">{account.name}</h3>
+                    <p className="text-xs text-muted-foreground mb-3">{account.type} - {account.institution}</p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Income:</span>
+                        <span className="font-medium text-green-600">+${totalIncome.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Expenses:</span>
+                        <span className="font-medium text-red-600">-${totalExpenses.toFixed(2)}</span>
+                      </div>
+                      <div className="border-t pt-2 flex justify-between">
+                        <span className="font-semibold">Balance:</span>
+                        <span className="font-bold" style={{ color: accountBalance >= 0 ? '#10b981' : '#ef4444' }}>
+                          ${accountBalance.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

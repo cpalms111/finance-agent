@@ -33,6 +33,10 @@ export default function BankImport() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [selectedTransactions, setSelectedTransactions] = useState<Set<number>>(new Set());
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<number | undefined>();
+
+  // Fetch accounts
+  const { data: accounts = [] } = trpc.accounts.list.useQuery();
 
   const categorizeTransactionsMutation = trpc.bankImport.categorizeTransactions.useMutation();
   const saveMerchantRuleMutation = trpc.bankImport.saveMerchantRule.useMutation();
@@ -141,11 +145,17 @@ export default function BankImport() {
   };
 
   const handleImport = async () => {
+    if (!selectedAccount) {
+      toast.error("Please select an account to import transactions to");
+      return;
+    }
+
     const toImport = transactions
       .filter((_, i) => selectedTransactions.has(i))
       .map(tx => ({
         ...tx,
         category: tx.category || "other",
+        accountId: selectedAccount,
       }));
     if (toImport.length === 0) {
       toast.error("Please select at least one transaction to import");
@@ -154,6 +164,23 @@ export default function BankImport() {
 
     await importTransactionsMutation.mutateAsync(toImport as any);
   };
+
+  if (accounts.length === 0) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>No Accounts Found</CardTitle>
+            <CardDescription>You need to create at least one account before importing transactions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4">Bank import requires an account to link imported transactions to. Please create an account first.</p>
+            <Button onClick={() => setLocation("/accounts")}>Go to Accounts</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (step === "upload") {
     return (
@@ -218,6 +245,29 @@ export default function BankImport() {
           Review and adjust categories before importing
         </p>
       </div>
+
+      {accounts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Select Account</CardTitle>
+            <CardDescription>Choose which account to import these transactions to</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Select value={selectedAccount?.toString() || ""} onValueChange={(value) => setSelectedAccount(value ? parseInt(value) : undefined)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select an account" />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((account) => (
+                  <SelectItem key={account.id} value={account.id.toString()}>
+                    {account.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
