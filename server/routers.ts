@@ -362,6 +362,103 @@ Provide your analysis in JSON format with: verdict (wise/unwise/neutral), reason
         }
       }),
   }),
+
+  monthlySummaries: router({
+    list: protectedProcedure
+      .query(async ({ ctx }) => {
+        return db.getUserMonthlySummaries(ctx.user.id);
+      }),
+    get: protectedProcedure
+      .input(z.object({ month: z.string() }))
+      .query(async ({ ctx, input }) => {
+        return db.getMonthlySummary(ctx.user.id, input.month);
+      }),
+    generate: protectedProcedure
+      .input(z.object({ month: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        // Check if summary already exists for this month
+        const existing = await db.getMonthlySummary(ctx.user.id, input.month);
+        if (existing) {
+          return existing;
+        }
+
+        // Get all financial data for the month
+        const [startDate, endDate] = input.month.split('-');
+        const monthStart = new Date(`${input.month}-01`);
+        const monthEnd = new Date(new Date(monthStart).setMonth(monthStart.getMonth() + 1));
+
+        const expenses = await db.getUserExpenses(ctx.user.id, monthStart, monthEnd);
+        const income = await db.getUserIncomeRecords(ctx.user.id, monthStart, monthEnd);
+        const budgets = await db.getUserBudgets(ctx.user.id, input.month);
+
+        const totalExpenses = expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+        const totalIncome = income.reduce((sum, i) => sum + parseFloat(i.amount), 0);
+        const savingsAmount = totalIncome - totalExpenses;
+
+        // Build expense breakdown
+        const expensesByCategory: Record<string, number> = {};
+        expenses.forEach(e => {
+          expensesByCategory[e.category] = (expensesByCategory[e.category] || 0) + parseFloat(e.amount);
+        });
+
+        // Generate AI summary
+        const prompt = `Generate a personalized financial summary for the month of ${input.month}.
+
+Financial Data:
+- Total Income: $${totalIncome.toFixed(2)}
+- Total Expenses: $${totalExpenses.toFixed(2)}
+- Net Savings: $${savingsAmount.toFixed(2)}
+- Savings Rate: ${totalIncome > 0 ? ((savingsAmount / totalIncome) * 100).toFixed(1) : 0}%
+
+Expense Breakdown:
+${Object.entries(expensesByCategory).map(([cat, amt]) => `- ${cat}: $${amt.toFixed(2)}`).join('\n')}
+
+Budgets Set:
+${budgets.map((b: any) => `- ${b.category}: $${b.limit} (spent: $${expensesByCategory[b.category] || 0})`).join('\n')}
+
+Provide a concise, actionable summary with:
+1. Key spending patterns
+2. Budget performance highlights
+3. Savings insights
+4. Specific recommendations for next month
+
+Keep it professional but conversational, 150-200 words.`;
+
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: "You are a personal finance analyst. Provide insightful, actionable financial summaries.",
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+        });
+
+        const summaryContent = response.choices[0]?.message.content || "Unable to generate summary";
+        const summaryText = typeof summaryContent === 'string' ? summaryContent : JSON.stringify(summaryContent);
+
+        // Save summary to database
+        await db.createMonthlySummary(
+          ctx.user.id,
+          input.month,
+          summaryText,
+          totalIncome.toString(),
+          totalExpenses.toString(),
+          savingsAmount.toString()
+        );
+
+        return {
+          month: input.month,
+          summary: summaryText,
+          totalIncome: totalIncome.toString(),
+          totalExpenses: totalExpenses.toString(),
+          savingsAmount: savingsAmount.toString(),
+        };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

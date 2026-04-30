@@ -12,6 +12,7 @@ import FinancialAdvisor from "./FinancialAdvisor";
 import DataExport from "./DataExport";
 import SavingsRoadmap from "./SavingsRoadmap";
 import BankImport from "./BankImport";
+import MonthlySummaries from "./MonthlySummaries";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -54,6 +55,7 @@ export default function Home() {
     { label: "Roadmap", path: "/roadmap" },
     { label: "Income", path: "/income" },
     { label: "AI Advisor", path: "/advisor" },
+    { label: "Summaries", path: "/summaries" },
     { label: "Export", path: "/export" },
   ];
 
@@ -75,6 +77,8 @@ export default function Home() {
         return <IncomeOrganizer />;
       case "/advisor":
         return <FinancialAdvisor />;
+      case "/summaries":
+        return <MonthlySummaries />;
       case "/export":
         return <DataExport />;
       default:

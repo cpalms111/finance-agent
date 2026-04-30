@@ -310,3 +310,10 @@ export async function deleteMerchantRule(userId: number, ruleId: number) {
     and(eq(merchantRules.id, ruleId), eq(merchantRules.userId, userId))
   );
 }
+
+export async function getUserMonthlySummaries(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(monthlySummaries).where(eq(monthlySummaries.userId, userId)).orderBy(desc(monthlySummaries.month));
+}
