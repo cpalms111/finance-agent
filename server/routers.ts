@@ -2,6 +2,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
+import { TRPCError } from "@trpc/server";
 import * as db from "./db";
 import { z } from "zod";
 import { invokeLLM } from "./_core/llm";
@@ -278,6 +279,73 @@ Respond with a JSON array where each object has: description (original), categor
       .input(z.object({ merchantKeyword: z.string(), category: z.string() }))
       .mutation(async ({ ctx, input }) => {
         return db.saveMerchantRule(ctx.user.id, input.merchantKeyword, input.category);
+      }),
+
+    extractFromPDF: protectedProcedure
+      .input(z.object({
+        fileName: z.string(),
+        fileData: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        try {
+          const prompt = `Extract all transactions from this Wells Fargo PDF. For each, provide date (MM/DD/YYYY), description, amount (positive=income, negative=expense). Respond with JSON array: [{date, description, amount}]. Only "Posted" transactions.`;
+
+          const response = await invokeLLM({
+            messages: [
+              {
+                role: "system",
+                content: "You are a financial document parser. Extract transaction data accurately. Always respond with valid JSON array.",
+              },
+              {
+                role: "user",
+                content: prompt,
+              },
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "file_url",
+                    file_url: {
+                      url: `data:application/pdf;base64,${input.fileData}`,
+                      mime_type: "application/pdf",
+                    },
+                  },
+                ],
+              },
+            ],
+          });
+
+          const content = response.choices[0]?.message.content;
+          if (!content || typeof content !== 'string') {
+            throw new Error("Failed to extract transactions from PDF");
+          }
+
+          const cleanContent = content
+            .replace(/^```json\s*/i, '')
+            .replace(/^```\s*/i, '')
+            .replace(/```\s*$/i, '')
+            .trim();
+
+          const transactions = JSON.parse(cleanContent);
+          if (!Array.isArray(transactions)) {
+            throw new Error("PDF extraction did not return an array");
+          }
+
+          return transactions.map((tx: any) => {
+            const amount = parseFloat(tx.amount);
+            const isIncome = amount > 0;
+            return {
+              date: tx.date,
+              description: tx.description,
+              amount: Math.abs(amount).toString(),
+              type: isIncome ? 'income' : 'expense',
+              isIncome: isIncome,
+            };
+          });
+        } catch (error: any) {
+          console.error("PDF extraction error:", error);
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `Failed to extract from PDF: ${error?.message}` });
+        }
       }),
 
     importTransactions: protectedProcedure

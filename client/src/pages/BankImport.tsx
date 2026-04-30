@@ -38,10 +38,18 @@ export default function BankImport() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<number | undefined>();
   const [error, setError] = useState<string | null>(null);
+  const [fileType, setFileType] = useState<'csv' | 'pdf' | null>(null);
 
   // Fetch accounts
   const { data: accounts = [] } = trpc.accounts.list.useQuery();
 
+  const extractFromPDFMutation = trpc.bankImport.extractFromPDF.useMutation({
+    onError: (error) => {
+      const message = error.message || "Failed to extract transactions from PDF";
+      setError(message);
+      toast.error(message);
+    },
+  });
   const categorizeTransactionsMutation = trpc.bankImport.categorizeTransactions.useMutation({
     onError: (error) => {
       const message = error.message || "Failed to categorize transactions";
@@ -63,14 +71,43 @@ export default function BankImport() {
   });
 
   const handleFileUpload = async (file: File) => {
-    if (!file.name.endsWith(".csv")) {
-      toast.error("Please upload a CSV file");
+    const isCSV = file.name.endsWith(".csv");
+    const isPDF = file.name.endsWith(".pdf");
+    
+    if (!isCSV && !isPDF) {
+      toast.error("Please upload a CSV or PDF file");
       return;
     }
 
+    setFileType(isPDF ? 'pdf' : 'csv');
     setIsProcessing(true);
     setError(null);
     try {
+      if (isPDF) {
+        // Handle PDF import
+        const fileData = await file.arrayBuffer();
+        const bytes = new Uint8Array(fileData);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64Data = btoa(binary);
+        
+        const pdfTransactions = await trpc.bankImport.extractFromPDF.useMutation().mutateAsync({
+          fileName: file.name,
+          fileData: base64Data,
+        });
+        
+        // Process PDF transactions through same flow
+        const allTransactions = pdfTransactions as Transaction[];
+        setTransactions(allTransactions);
+        setSelectedTransactions(new Set(allTransactions.map((_: any, i: number) => i)));
+        setStep("review");
+        toast.success(`Extracted ${allTransactions.length} transactions from PDF`);
+        return;
+      }
+      
+      // Handle CSV import
       const text = await file.text();
       
       // Parse Wells Fargo CSV format
@@ -244,25 +281,25 @@ export default function BankImport() {
             >
               <input
                 type="file"
-                accept=".csv"
+                accept=".csv,.pdf"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) handleFileUpload(file);
                 }}
                 className="hidden"
-                id="csv-upload"
+                id="file-upload"
               />
-              <label htmlFor="csv-upload" className="cursor-pointer">
+              <label htmlFor="file-upload" className="cursor-pointer">
                 <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-lg font-medium">Drag and drop your CSV file here</p>
-                <p className="text-sm text-muted-foreground">or click to browse</p>
+                <p className="text-lg font-medium">Drag and drop your CSV or PDF file here</p>
+                <p className="text-sm text-muted-foreground">Wells Fargo CSV or PDF statement • or click to browse</p>
               </label>
             </div>
 
             {isProcessing && (
               <div className="mt-4 flex items-center justify-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Processing CSV...</span>
+                <span>{fileType === 'pdf' ? 'Extracting transactions from PDF...' : 'Processing CSV...'}</span>
               </div>
             )}
           </CardContent>
