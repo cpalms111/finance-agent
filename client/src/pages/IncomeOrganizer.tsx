@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
 import { format, startOfMonth, endOfMonth } from "date-fns";
-import { Plus, TrendingUp } from "lucide-react";
+import { Plus, TrendingUp, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function IncomeOrganizer() {
@@ -27,7 +27,7 @@ export default function IncomeOrganizer() {
     endDate,
   });
 
-  // Mutation
+  // Mutations
   const createMutation = trpc.income.create.useMutation({
     onSuccess: () => {
       toast.success("Income recorded");
@@ -36,6 +36,14 @@ export default function IncomeOrganizer() {
       setIsAddOpen(false);
     },
     onError: () => toast.error("Failed to record income"),
+  });
+
+  const deleteMutation = trpc.income.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Income record deleted");
+      refetch();
+    },
+    onError: () => toast.error("Failed to delete income record"),
   });
 
   const handleAddIncome = () => {
@@ -50,6 +58,12 @@ export default function IncomeOrganizer() {
       date: new Date(formData.date),
       notes: formData.notes || undefined,
     });
+  };
+
+  const handleDeleteIncome = (id: number) => {
+    if (confirm("Are you sure you want to delete this income record?")) {
+      deleteMutation.mutate({ id });
+    }
   };
 
   // Calculate statistics
@@ -207,6 +221,7 @@ export default function IncomeOrganizer() {
                     <th className="text-left py-3 px-4 font-medium">Source</th>
                     <th className="text-left py-3 px-4 font-medium">Notes</th>
                     <th className="text-right py-3 px-4 font-medium">Amount</th>
+                    <th className="text-right py-3 px-4 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -217,6 +232,16 @@ export default function IncomeOrganizer() {
                       <td className="py-3 px-4">{record.notes || "-"}</td>
                       <td className="py-3 px-4 text-right font-semibold text-green-600">
                         +${parseFloat(record.amount).toFixed(2)}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteIncome(record.id)}
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
                       </td>
                     </tr>
                   ))}

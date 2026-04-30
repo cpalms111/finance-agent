@@ -55,6 +55,11 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         return db.setBudget(ctx.user.id, input.category, input.limit, input.month);
       }),
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return db.deleteBudget(input.id, ctx.user.id);
+      }),
   }),
 
   savingsGoals: router({
@@ -71,6 +76,11 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         return db.updateSavingsGoal(input.id, ctx.user.id, input.currentAmount);
       }),
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return db.deleteSavingsGoal(input.id, ctx.user.id);
+      }),
   }),
 
   income: router({
@@ -83,6 +93,11 @@ export const appRouter = router({
       .input(z.object({ amount: z.string(), source: z.string().optional(), date: z.date(), notes: z.string().optional() }))
       .mutation(async ({ ctx, input }) => {
         return db.createIncomeRecord(ctx.user.id, input.amount, input.source, input.date, input.notes);
+      }),
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return db.deleteIncomeRecord(input.id, ctx.user.id);
       }),
   }),
 

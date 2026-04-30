@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Progress } from "@/components/ui/progress";
 import { trpc } from "@/lib/trpc";
 import { format } from "date-fns";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 const EXPENSE_CATEGORIES = ["food", "transport", "utilities", "entertainment", "healthcare", "shopping", "other"];
@@ -37,6 +37,20 @@ export default function BudgetTracker() {
     },
     onError: () => toast.error("Failed to set budget"),
   });
+
+  const deleteBudgetMutation = trpc.budgets.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Budget deleted");
+      refetchBudgets();
+    },
+    onError: () => toast.error("Failed to delete budget"),
+  });
+
+  const handleDeleteBudget = (id: number) => {
+    if (confirm("Are you sure you want to delete this budget?")) {
+      deleteBudgetMutation.mutate({ id });
+    }
+  };
 
   const handleSetBudget = () => {
     if (!formData.limit) {
@@ -136,11 +150,21 @@ export default function BudgetTracker() {
                       ${budget.spent.toFixed(2)} of ${parseFloat(budget.limit).toFixed(2)}
                     </CardDescription>
                   </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold">{Math.min(budget.percentage, 100).toFixed(0)}%</div>
-                    <p className="text-xs text-muted-foreground">
-                      {budget.percentage > 100 ? "Over budget" : "Remaining"}
-                    </p>
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <div className="text-2xl font-bold">{Math.min(budget.percentage, 100).toFixed(0)}%</div>
+                      <p className="text-xs text-muted-foreground">
+                        {budget.percentage > 100 ? "Over budget" : "Remaining"}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteBudget(budget.id)}
+                      disabled={deleteBudgetMutation.isPending}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-600" />
+                    </Button>
                   </div>
                 </div>
               </CardHeader>

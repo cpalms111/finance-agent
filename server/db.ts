@@ -185,6 +185,13 @@ export async function setBudget(userId: number, category: string, limit: string,
   return db.insert(budgets).values({ userId, category, limit, month });
 }
 
+export async function deleteBudget(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.delete(budgets).where(and(eq(budgets.id, id), eq(budgets.userId, userId)));
+}
+
 // Savings goals queries
 export async function getUserSavingsGoals(userId: number) {
   const db = await getDb();
@@ -209,6 +216,13 @@ export async function updateSavingsGoal(id: number, userId: number, currentAmoun
   );
 }
 
+export async function deleteSavingsGoal(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.delete(savingsGoals).where(and(eq(savingsGoals.id, id), eq(savingsGoals.userId, userId)));
+}
+
 // Income records queries
 export async function getUserIncomeRecords(userId: number, startDate?: Date, endDate?: Date) {
   const db = await getDb();
@@ -231,6 +245,13 @@ export async function createIncomeRecord(userId: number, amount: string, source?
   if (!db) throw new Error("Database not available");
 
   return db.insert(incomeRecords).values({ userId, amount, source, date: date || new Date(), notes });
+}
+
+export async function deleteIncomeRecord(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.delete(incomeRecords).where(and(eq(incomeRecords.id, id), eq(incomeRecords.userId, userId)));
 }
 
 // Monthly summaries queries

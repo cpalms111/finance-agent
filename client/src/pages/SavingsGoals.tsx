@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Progress } from "@/components/ui/progress";
 import { trpc } from "@/lib/trpc";
 import { format, formatDistance } from "date-fns";
-import { Plus, Target } from "lucide-react";
+import { Plus, Target, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function SavingsGoals() {
@@ -39,6 +39,20 @@ export default function SavingsGoals() {
     },
     onError: () => toast.error("Failed to update goal"),
   });
+
+  const deleteMutation = trpc.savingsGoals.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Goal deleted");
+      refetch();
+    },
+    onError: () => toast.error("Failed to delete goal"),
+  });
+
+  const handleDeleteGoal = (id: number) => {
+    if (confirm("Are you sure you want to delete this savings goal?")) {
+      deleteMutation.mutate({ id });
+    }
+  };
 
   const handleCreateGoal = () => {
     if (!formData.name || !formData.targetAmount) {
@@ -142,11 +156,23 @@ export default function SavingsGoals() {
             return (
               <Card key={goal.id}>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="h-5 w-5" />
-                    {goal.name}
-                  </CardTitle>
-                  {goal.description && <CardDescription>{goal.description}</CardDescription>}
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <CardTitle className="flex items-center gap-2">
+                        <Target className="h-5 w-5" />
+                        {goal.name}
+                      </CardTitle>
+                      {goal.description && <CardDescription>{goal.description}</CardDescription>}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteGoal(goal.id)}
+                      disabled={deleteMutation.isPending}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-600" />
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
