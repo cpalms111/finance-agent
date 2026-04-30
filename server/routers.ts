@@ -92,6 +92,64 @@ export const appRouter = router({
       .query(async ({ ctx, input }) => {
         return db.getMonthlySummary(ctx.user.id, input.month);
       }),
+
+    generate: protectedProcedure
+      .input(z.object({ month: z.string() })) // format: 'YYYY-MM'
+      .mutation(async ({ ctx, input }) => {
+        const [year, month] = input.month.split('-').map(Number);
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 0, 23, 59, 59);
+
+        const expenses = await db.getUserExpenses(ctx.user.id, startDate, endDate);
+        const income = await db.getUserIncomeRecords(ctx.user.id, startDate, endDate);
+        const budgets = await db.getUserBudgets(ctx.user.id, input.month);
+        const goals = await db.getUserSavingsGoals(ctx.user.id);
+
+        const totalExpenses = expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+        const totalIncome = income.reduce((sum, i) => sum + parseFloat(i.amount), 0);
+        const savingsAmount = (totalIncome - totalExpenses).toString();
+
+        const prompt = `Generate a monthly financial summary for ${input.month}.
+        
+Financial Data:
+- Total Income: $${totalIncome.toFixed(2)}
+- Total Expenses: $${totalExpenses.toFixed(2)}
+- Net Savings: $${(totalIncome - totalExpenses).toFixed(2)}
+- Number of Transactions: ${expenses.length}
+- Active Budgets: ${budgets.length}
+- Savings Goals: ${goals.length}
+
+Provide a concise, professional summary of the user's financial performance this month, highlighting key trends and areas for improvement.`;
+
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: "You are a financial analyst. Provide a professional monthly summary.",
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+        });
+
+        const summaryText = response.choices[0]?.message.content;
+        if (!summaryText || typeof summaryText !== 'string') {
+          throw new Error("Failed to generate summary from LLM");
+        }
+
+        await db.createMonthlySummary(
+          ctx.user.id,
+          input.month,
+          summaryText,
+          totalIncome.toString(),
+          totalExpenses.toString(),
+          savingsAmount
+        );
+
+        return db.getMonthlySummary(ctx.user.id, input.month);
+      }),
   }),
 
   advisor: router({
@@ -138,7 +196,13 @@ Provide your analysis in JSON format with: verdict (wise/unwise/neutral), reason
         }
 
         try {
-          const analysis = JSON.parse(content);
+          const cleanContent = content
+            .replace(/^```json\s*/i, '')
+            .replace(/^```\s*/i, '')
+            .replace(/```\s*$/i, '')
+            .trim();
+
+          const analysis = JSON.parse(cleanContent);
           return {
             verdict: analysis.verdict || "neutral",
             reasoning: analysis.reasoning || "Unable to provide analysis",
