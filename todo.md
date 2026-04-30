@@ -83,38 +83,38 @@
 ## Bank Statement Import Feature (NEW)
 
 ### Database
-- [ ] Add merchantRules table to schema
-- [ ] Generate and apply database migration
+- [x] Add merchantRules table to schema
+- [x] Generate and apply database migration
 
 ### Backend API
-- [ ] Add tRPC procedure to parse CSV and extract transactions
-- [ ] Add tRPC procedure to get saved merchant rules
-- [ ] Add tRPC procedure to save merchant rule (when user changes category)
-- [ ] Add tRPC procedure to categorize transactions with AI (with merchant rules applied first)
-- [ ] Add tRPC procedure to import transactions to expenses table
+- [x] Add tRPC procedure to parse CSV and extract transactions
+- [x] Add tRPC procedure to get saved merchant rules
+- [x] Add tRPC procedure to save merchant rule (when user changes category)
+- [x] Add tRPC procedure to categorize transactions with AI (with merchant rules applied first)
+- [x] Add tRPC procedure to import transactions to expenses table
 
 ### Frontend - Import Page
-- [ ] Create BankImport.tsx page component
-- [ ] Add "Import Bank Statement" button to Expenses page
-- [ ] Build CSV upload area (drag & drop + file browser)
-- [ ] Accept Wells Fargo and generic CSV formats
+- [x] Create BankImport.tsx page component
+- [x] Add "Import Bank Statement" button to Expenses page
+- [x] Build CSV upload area (drag & drop + file browser)
+- [x] Accept Wells Fargo and generic CSV formats
 
 ### Frontend - Review Screen
-- [ ] Display review table with Date, Description, Amount, Category
-- [ ] Add category dropdown for each transaction (pre-filled with AI suggestion)
-- [ ] Add "Select All" / "Deselect All" checkboxes
-- [ ] Add checkbox for each transaction to include/exclude from import
-- [ ] Show transaction count and import button
+- [x] Display review table with Date, Description, Amount, Category
+- [x] Add category dropdown for each transaction (pre-filled with AI suggestion)
+- [x] Add "Select All" / "Deselect All" checkboxes
+- [x] Add checkbox for each transaction to include/exclude from import
+- [x] Show transaction count and import button
 
 ### Frontend - Integration
-- [ ] Call AI to categorize transactions
-- [ ] Apply saved merchant rules before AI categorization
-- [ ] Handle category changes and save as merchant rules
-- [ ] Import selected transactions to database
-- [ ] Redirect to Expenses page after successful import
+- [x] Call AI to categorize transactions
+- [x] Apply saved merchant rules before AI categorization
+- [x] Handle category changes and save as merchant rules
+- [x] Import selected transactions to database
+- [x] Redirect to Expenses page after successful import
 
 ### Testing
-- [ ] Test CSV parsing with Wells Fargo format
-- [ ] Test AI categorization accuracy
-- [ ] Test merchant rule saving and application
-- [ ] Test transaction import and database updates
+- [x] Test CSV parsing with Wells Fargo format
+- [x] Test AI categorization accuracy
+- [x] Test merchant rule saving and application
+- [x] Test transaction import and database updates (16/16 tests passing)

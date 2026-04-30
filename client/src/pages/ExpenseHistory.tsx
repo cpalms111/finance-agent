@@ -6,12 +6,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
 import { format, startOfMonth, endOfMonth } from "date-fns";
-import { Trash2, Edit2, Plus } from "lucide-react";
+import { Trash2, Edit2, Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { useLocation } from "wouter";
 
 const EXPENSE_CATEGORIES = ["food", "transport", "utilities", "entertainment", "healthcare", "shopping", "other"];
 
 export default function ExpenseHistory() {
+  const [, setLocation] = useLocation();
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [startDate, setStartDate] = useState(format(startOfMonth(new Date()), "yyyy-MM-dd"));
   const [endDate, setEndDate] = useState(format(endOfMonth(new Date()), "yyyy-MM-dd"));
@@ -79,13 +81,18 @@ export default function ExpenseHistory() {
           <h1 className="text-3xl font-bold">Expense History</h1>
           <p className="text-muted-foreground">View and manage your expenses</p>
         </div>
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Expense
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => setLocation("/import-bank")}>
+            <Upload className="h-4 w-4" />
+            Import Bank
+          </Button>
+          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add Expense
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add New Expense</DialogTitle>
@@ -138,7 +145,8 @@ export default function ExpenseHistory() {
               </Button>
             </div>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       {/* Filters */}
