@@ -118,3 +118,101 @@
 - [x] Test AI categorization accuracy
 - [x] Test merchant rule saving and application
 - [x] Test transaction import and database updates (16/16 tests passing)
+
+
+## Multi-Account System (NEW)
+
+### Phase 8: Database & Account Management
+- [ ] Create accounts table with id, userId, name, type, institution, color
+- [ ] Generate and apply database migration
+- [ ] Add account CRUD query functions to db.ts
+- [ ] Add account tRPC procedures (list, create, update, delete)
+- [ ] Create Accounts management page with account cards
+- [ ] Add colored account cards with edit/delete buttons
+- [ ] Show setup prompt when no accounts exist
+
+### Phase 9: Link Accounts to Transactions
+- [ ] Add accountId field to expenses table
+- [ ] Add accountId field to income table
+- [ ] Generate and apply migrations
+- [ ] Update expense form to include account dropdown
+- [ ] Update income form to include account dropdown
+- [ ] Update expense/income create procedures to accept accountId
+- [ ] Update database queries to handle accountId
+
+### Phase 10: Account Filtering
+- [ ] Add account filter dropdown to Expenses page
+- [ ] Add account filter dropdown to Income page
+- [ ] Add account filter dropdown to Dashboard
+- [ ] Update queries to filter by accountId
+- [ ] Show "All Accounts" option in filters
+
+### Phase 11: Dashboard & Bank Import Updates
+- [ ] Add Dashboard account summary section
+- [ ] Show each account as card with income/expenses/balance
+- [ ] Update bank import flow to ask for account selection
+- [ ] Link imported transactions to selected account
+- [ ] Update import procedures to set accountId
+
+### Phase 12: Testing & Deployment
+- [ ] Write tests for account CRUD operations
+- [ ] Write tests for account filtering
+- [ ] Write tests for multi-account transactions
+- [ ] Verify all features end-to-end
+- [ ] Commit and push to GitHub
+
+
+## Multi-Account System (Incremental Implementation)
+
+### Phase 1: Accounts Table & Management Page
+- [x] Create accounts table in database schema (id, userId, name, type, institution, color)
+- [x] Generate database migration for accounts table
+- [x] Add account query functions to db.ts (list, create, update, delete)
+- [x] Add account tRPC procedures (list, create, update, delete)
+- [x] Create Accounts management page with colored account cards
+- [x] Add edit and delete buttons to account cards
+- [x] Show setup prompt when no accounts exist
+- [x] Test accounts page works independently (no integration yet)
+- [x] All 14 tests passing for account CRUD operations
+
+### Phase 2: Add accountId to Transactions (Backward Compatible)
+- [ ] Add optional accountId field to expenses table
+- [ ] Add optional accountId field to income table
+- [ ] Generate database migrations
+- [ ] Update createExpense function to accept optional accountId
+- [ ] Update createIncomeRecord function to accept optional accountId
+- [ ] Verify existing expense/income creation still works without accountId
+
+### Phase 3: Update Transaction Forms
+- [ ] Update expense form to include account dropdown
+- [ ] Update income form to include account dropdown
+- [ ] Make account selection required in forms
+- [ ] Update expense/income procedures to handle accountId
+- [ ] Test that new transactions are created with accountId
+
+### Phase 4: Add Account Filters
+- [ ] Add account filter dropdown to Expenses page
+- [ ] Add account filter dropdown to Income page
+- [ ] Add account filter dropdown to Dashboard
+- [ ] Update queries to filter by accountId when selected
+- [ ] Show "All Accounts" option in filters
+- [ ] Test filtering works correctly
+
+### Phase 5: Bank Import Integration
+- [ ] Update bank import flow to ask for account selection
+- [ ] Link imported transactions to selected account
+- [ ] Update import procedures to set accountId
+- [ ] Test CSV import with account selection
+
+### Phase 6: Dashboard Account Summary
+- [ ] Add Dashboard account summary section
+- [ ] Show each account as card with income/expenses/balance
+- [ ] Display account color and type
+- [ ] Test summary displays correctly
+
+### Phase 7: Testing & Deployment
+- [ ] Write tests for account CRUD operations
+- [ ] Write tests for account filtering
+- [ ] Write tests for multi-account transactions
+- [ ] Verify all existing features still work
+- [ ] Commit and push to GitHub

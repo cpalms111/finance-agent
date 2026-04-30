@@ -1,6 +1,6 @@
-import { and, desc, eq, gte, lte } from "drizzle-orm";
+import { eq, and, gte, lte, desc, or, asc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, expenses, budgets, savingsGoals, incomeRecords, monthlySummaries, merchantRules } from "../drizzle/schema";
+import { InsertUser, users, expenses, budgets, savingsGoals, incomeRecords, monthlySummaries, merchantRules, accounts, Account, InsertAccount } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -240,11 +240,11 @@ export async function getUserIncomeRecords(userId: number, startDate?: Date, end
   return db.select().from(incomeRecords).where(and(...conditions)).orderBy(desc(incomeRecords.date));
 }
 
-export async function createIncomeRecord(userId: number, amount: string, source?: string, date?: Date, notes?: string) {
+export async function createIncomeRecord(userId: number, amount: string, source?: string, date?: Date, description?: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  return db.insert(incomeRecords).values({ userId, amount, source, date: date || new Date(), notes });
+  return db.insert(incomeRecords).values({ userId, amount, source: source || "Other", date: date || new Date(), description });
 }
 
 export async function deleteIncomeRecord(id: number, userId: number) {
@@ -316,4 +316,42 @@ export async function getUserMonthlySummaries(userId: number) {
   if (!db) return [];
 
   return db.select().from(monthlySummaries).where(eq(monthlySummaries.userId, userId)).orderBy(desc(monthlySummaries.month));
+}
+
+
+// Account queries
+export async function getUserAccounts(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(accounts).where(eq(accounts.userId, userId)).orderBy(asc(accounts.createdAt));
+}
+
+export async function createAccount(userId: number, name: string, type: "Checking" | "Savings" | "Business" | "Credit Card", institution: string, color: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.insert(accounts).values({ userId, name, type, institution, color });
+}
+
+export async function updateAccount(id: number, userId: number, name?: string, type?: string, institution?: string, color?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const updateSet: Record<string, any> = {};
+  if (name !== undefined) updateSet.name = name;
+  if (type !== undefined) updateSet.type = type;
+  if (institution !== undefined) updateSet.institution = institution;
+  if (color !== undefined) updateSet.color = color;
+
+  if (Object.keys(updateSet).length === 0) return;
+
+  return db.update(accounts).set(updateSet).where(and(eq(accounts.id, id), eq(accounts.userId, userId)));
+}
+
+export async function deleteAccount(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.delete(accounts).where(and(eq(accounts.id, id), eq(accounts.userId, userId)));
 }

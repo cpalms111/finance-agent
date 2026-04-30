@@ -87,9 +87,9 @@ export const incomeRecords = mysqlTable("incomeRecords", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  source: varchar("source", { length: 255 }), // e.g., "freelance", "gig work", "side project"
+  source: varchar("source", { length: 255 }).notNull(), // e.g., "salary", "freelance"
+  description: text("description"),
   date: timestamp("date").notNull(),
-  notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -132,3 +132,21 @@ export const merchantRules = mysqlTable("merchantRules", {
 
 export type MerchantRule = typeof merchantRules.$inferSelect;
 export type InsertMerchantRule = typeof merchantRules.$inferInsert;
+
+/**
+ * Accounts table for multi-account support.
+ * Stores bank accounts, credit cards, and other financial accounts for each user.
+ */
+export const accounts = mysqlTable("accounts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(), // e.g., "My Checking", "Business Account"
+  type: mysqlEnum("type", ["Checking", "Savings", "Business", "Credit Card"]).notNull(),
+  institution: varchar("institution", { length: 255 }).notNull(), // e.g., "Wells Fargo", "Chase"
+  color: varchar("color", { length: 7 }).default("#3b82f6").notNull(), // Hex color code
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Account = typeof accounts.$inferSelect;
+export type InsertAccount = typeof accounts.$inferInsert;

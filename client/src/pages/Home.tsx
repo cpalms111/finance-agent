@@ -13,6 +13,7 @@ import DataExport from "./DataExport";
 import SavingsRoadmap from "./SavingsRoadmap";
 import BankImport from "./BankImport";
 import MonthlySummaries from "./MonthlySummaries";
+import Accounts from "./Accounts";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -48,6 +49,7 @@ export default function Home() {
   // Render dashboard with navigation
   const navItems = [
     { label: "Dashboard", path: "/" },
+    { label: "Accounts", path: "/accounts" },
     { label: "Expenses", path: "/expenses" },
     { label: "Import Bank", path: "/import" },
     { label: "Budgets", path: "/budgets" },
@@ -63,6 +65,8 @@ export default function Home() {
     switch (location) {
       case "/":
         return <Dashboard />;
+      case "/accounts":
+        return <Accounts />;
       case "/expenses":
         return <ExpenseHistory />;
       case "/import":

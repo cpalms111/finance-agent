@@ -30,9 +30,9 @@ export default function DataExport() {
       });
 
       csv += "\n\nINCOME\n";
-      csv += "Date,Source,Amount,Notes\n";
+      csv += "Date,Source,Amount,Description\n";
       income.forEach((inc) => {
-        csv += `${format(new Date(inc.date), "yyyy-MM-dd")},${inc.source || ""},${inc.amount},"${inc.notes || ""}"\n`;
+        csv += `${format(new Date(inc.date), "yyyy-MM-dd")},${inc.source || ""},${inc.amount},"${inc.description || ""}"\n`;
       });
 
       csv += "\n\nBUDGETS\n";

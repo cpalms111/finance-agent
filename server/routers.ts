@@ -457,8 +457,40 @@ Keep it professional but conversational, 150-200 words.`;
           totalExpenses: totalExpenses.toString(),
           savingsAmount: savingsAmount.toString(),
         };
+       }),
+  }),
+
+  accounts: router({
+    list: protectedProcedure
+      .query(async ({ ctx }) => {
+        return db.getUserAccounts(ctx.user.id);
+      }),
+    create: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        type: z.enum(["Checking", "Savings", "Business", "Credit Card"]),
+        institution: z.string().min(1),
+        color: z.string().regex(/^#[0-9A-F]{6}$/i),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return db.createAccount(ctx.user.id, input.name, input.type, input.institution, input.color);
+      }),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        type: z.enum(["Checking", "Savings", "Business", "Credit Card"]).optional(),
+        institution: z.string().optional(),
+        color: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return db.updateAccount(input.id, ctx.user.id, input.name, input.type, input.institution, input.color);
+      }),
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return db.deleteAccount(input.id, ctx.user.id);
       }),
   }),
 });
-
 export type AppRouter = typeof appRouter;

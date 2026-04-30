@@ -229,7 +229,7 @@ export default function IncomeOrganizer() {
                     <tr key={record.id} className="border-b hover:bg-muted/50">
                       <td className="py-3 px-4">{format(new Date(record.date), "MMM dd, yyyy")}</td>
                       <td className="py-3 px-4">{record.source || "-"}</td>
-                      <td className="py-3 px-4">{record.notes || "-"}</td>
+                      <td className="py-3 px-4">{record.description || "-"}</td>
                       <td className="py-3 px-4 text-right font-semibold text-green-600">
                         +${parseFloat(record.amount).toFixed(2)}
                       </td>

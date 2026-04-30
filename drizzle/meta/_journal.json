@@ -22,6 +22,20 @@
       "when": 1777525201450,
       "tag": "0002_famous_midnight",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1777528838673,
+      "tag": "0003_majestic_bloodstorm",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1777531076042,
+      "tag": "0004_closed_invisible_woman",
+      "breakpoints": true
     }
   ]
 }
