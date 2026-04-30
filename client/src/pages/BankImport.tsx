@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { trpc } from "@/lib/trpc";
+import { parseWellsFargoCSV, type WellsFargoRow } from "@/lib/wellsFargoParser";
 import { Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -25,6 +26,8 @@ interface Transaction {
   description: string;
   amount: string;
   category?: string;
+  type?: 'expense' | 'income' | 'transfer';
+  isIncome?: boolean;
 }
 
 export default function BankImport() {
@@ -34,18 +37,29 @@ export default function BankImport() {
   const [selectedTransactions, setSelectedTransactions] = useState<Set<number>>(new Set());
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<number | undefined>();
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch accounts
   const { data: accounts = [] } = trpc.accounts.list.useQuery();
 
-  const categorizeTransactionsMutation = trpc.bankImport.categorizeTransactions.useMutation();
+  const categorizeTransactionsMutation = trpc.bankImport.categorizeTransactions.useMutation({
+    onError: (error) => {
+      const message = error.message || "Failed to categorize transactions";
+      setError(message);
+      toast.error(message);
+    },
+  });
   const saveMerchantRuleMutation = trpc.bankImport.saveMerchantRule.useMutation();
   const importTransactionsMutation = trpc.bankImport.importTransactions.useMutation({
     onSuccess: () => {
       toast.success("Transactions imported successfully!");
       setLocation("/expenses");
     },
-    onError: () => toast.error("Failed to import transactions"),
+    onError: (error) => {
+      const message = error.message || "Failed to import transactions";
+      setError(message);
+      toast.error(message);
+    },
   });
 
   const handleFileUpload = async (file: File) => {
@@ -55,55 +69,57 @@ export default function BankImport() {
     }
 
     setIsProcessing(true);
+    setError(null);
     try {
       const text = await file.text();
-      const lines = text.split("\n").filter(line => line.trim());
       
-      // Parse CSV - handle both Wells Fargo and generic formats
-      const parsedTransactions: Transaction[] = [];
+      // Parse Wells Fargo CSV format
+      const wellsFargoRows = parseWellsFargoCSV(text);
       
-      for (let i = 1; i < lines.length; i++) {
-        const parts = lines[i].split(",").map(p => p.trim().replace(/^"(.*)"$/, "$1"));
+      // Separate into expenses and income
+      const expenses: Transaction[] = [];
+      const incomeTransactions: Transaction[] = [];
+      
+      for (const row of wellsFargoRows) {
+        const transaction: Transaction = {
+          date: row.date,
+          description: row.description,
+          amount: row.amount,
+          type: row.type,
+          isIncome: row.isIncome,
+        };
         
-        if (parts.length < 3) continue;
-
-        // Try to detect format and extract date, description, amount
-        let date = "", description = "", amount = "";
-        
-        // Wells Fargo format: Date, Description, Amount
-        if (lines[0].toLowerCase().includes("date") && lines[0].toLowerCase().includes("amount")) {
-          date = parts[0];
-          description = parts[1];
-          amount = parts[2];
+        if (row.type === 'income' || row.isIncome) {
+          incomeTransactions.push(transaction);
         } else {
-          // Generic format: assume first 3 columns
-          date = parts[0];
-          description = parts[1];
-          amount = parts[2];
-        }
-
-        if (date && description && amount) {
-          parsedTransactions.push({ date, description, amount });
+          expenses.push(transaction);
         }
       }
 
-      if (parsedTransactions.length === 0) {
-        toast.error("No valid transactions found in CSV");
-        setIsProcessing(false);
-        return;
+      // Categorize expenses using AI
+      let categorizedExpenses: Transaction[] = [];
+      if (expenses.length > 0) {
+        const categorized = await categorizeTransactionsMutation.mutateAsync({
+          transactions: expenses.map(tx => ({ date: tx.date, description: tx.description, amount: tx.amount })),
+        });
+        categorizedExpenses = categorized as Transaction[];
       }
 
-      // Categorize transactions using AI
-      const categorized = await categorizeTransactionsMutation.mutateAsync({
-        transactions: parsedTransactions.map(tx => ({ date: tx.date, description: tx.description, amount: tx.amount })),
-      });
+      // Combine all transactions
+      const allTransactions = [...categorizedExpenses, ...incomeTransactions];
+      
+      if (allTransactions.length === 0) {
+        throw new Error("No valid transactions found in CSV");
+      }
 
-      setTransactions(categorized as Transaction[]);
-      setSelectedTransactions(new Set(categorized.map((_: any, i: number) => i)));
+      setTransactions(allTransactions);
+      setSelectedTransactions(new Set(allTransactions.map((_: any, i: number) => i)));
       setStep("review");
-      toast.success(`Parsed ${categorized.length} transactions`);
-    } catch (error) {
-      toast.error("Failed to parse CSV file");
+      toast.success(`Parsed ${allTransactions.length} transactions (${categorizedExpenses.length} expenses, ${incomeTransactions.length} income)`);
+    } catch (error: any) {
+      const message = error?.message || "Failed to parse CSV file";
+      setError(message);
+      toast.error(message);
       console.error(error);
     } finally {
       setIsProcessing(false);
@@ -191,6 +207,24 @@ export default function BankImport() {
             Upload a CSV file from your bank to automatically categorize and import transactions
           </p>
         </div>
+
+        {error && (
+          <Card className="border-red-200 bg-red-50">
+            <CardHeader>
+              <CardTitle className="text-red-900">Import Error</CardTitle>
+            </CardHeader>
+            <CardContent className="text-red-800">
+              <p>{error}</p>
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => setError(null)}
+              >
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>

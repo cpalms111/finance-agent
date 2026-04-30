@@ -220,25 +220,31 @@ ${needsAI.map((tx: any) => `- ${tx.description} ($${tx.amount})`).join('\n')}
 
 Respond with a JSON array where each object has: description (original), category (one of the above).`;
 
-        const response = await invokeLLM({
-          messages: [
-            {
-              role: "system",
-              content: "You are a financial categorization expert. Always respond with valid JSON array.",
-            },
-            {
-              role: "user",
-              content: prompt,
-            },
-          ],
-        });
-
-        const content = response.choices[0]?.message.content;
-        if (!content || typeof content !== 'string') {
-          throw new Error("Failed to categorize transactions");
-        }
-
         try {
+          const response = await invokeLLM({
+            messages: [
+              {
+                role: "system",
+                content: "You are a financial categorization expert. Always respond with valid JSON array.",
+              },
+              {
+                role: "user",
+                content: prompt,
+              },
+            ],
+          });
+
+          const content = response.choices[0]?.message.content;
+          if (!content || typeof content !== 'string') {
+            console.error("LLM response missing content");
+            return categorizedByRules.map((tx: any) => ({
+              date: tx.date,
+              description: tx.description,
+              amount: tx.amount,
+              category: tx.category || "other",
+            }));
+          }
+
           const cleanContent = content
             .replace(/^```json\s*/i, '')
             .replace(/^```\s*/i, '')
@@ -246,8 +252,10 @@ Respond with a JSON array where each object has: description (original), categor
             .trim();
 
           const aiCategories = JSON.parse(cleanContent);
+          if (!Array.isArray(aiCategories)) {
+            throw new Error("LLM response is not an array");
+          }
           const categoryMap = new Map(aiCategories.map((item: any) => [item.description, item.category]));
-
           return categorizedByRules.map((tx: any) => ({
             date: tx.date,
             description: tx.description,
@@ -255,6 +263,8 @@ Respond with a JSON array where each object has: description (original), categor
             category: tx.category || categoryMap.get(tx.description) || "other",
           }));
         } catch (e) {
+          console.error("Error during AI categorization:", e);
+          // Fallback: return transactions with default categories
           return categorizedByRules.map((tx: any) => ({
             date: tx.date,
             description: tx.description,
