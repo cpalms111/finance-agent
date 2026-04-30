@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, expenses, budgets, savingsGoals, incomeRecords, monthlySummaries } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,165 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function getUserById(id: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get user: database not available");
+    return undefined;
+  }
+
+  const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
+}
+
+// Expense queries
+export async function getUserExpenses(userId: number, startDate?: Date, endDate?: Date, category?: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [eq(expenses.userId, userId)];
+  
+  if (startDate) {
+    conditions.push(gte(expenses.date, startDate));
+  }
+  if (endDate) {
+    conditions.push(lte(expenses.date, endDate));
+  }
+  if (category) {
+    conditions.push(eq(expenses.category, category));
+  }
+
+  return db.select().from(expenses).where(and(...conditions)).orderBy(desc(expenses.date));
+}
+
+export async function createExpense(userId: number, amount: string, category: string, description: string | null, date: Date) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(expenses).values({
+    userId,
+    amount,
+    category,
+    description,
+    date,
+  });
+
+  return result;
+}
+
+export async function updateExpense(id: number, userId: number, amount?: string, category?: string, description?: string | null, date?: Date) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const updates: Record<string, unknown> = {};
+  if (amount !== undefined) updates.amount = amount;
+  if (category !== undefined) updates.category = category;
+  if (description !== undefined) updates.description = description;
+  if (date !== undefined) updates.date = date;
+
+  return db.update(expenses).set(updates).where(and(eq(expenses.id, id), eq(expenses.userId, userId)));
+}
+
+export async function deleteExpense(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.delete(expenses).where(and(eq(expenses.id, id), eq(expenses.userId, userId)));
+}
+
+// Budget queries
+export async function getUserBudgets(userId: number, month?: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [eq(budgets.userId, userId)];
+  if (month) {
+    conditions.push(eq(budgets.month, month));
+  }
+  return db.select().from(budgets).where(and(...conditions));
+}
+
+export async function setBudget(userId: number, category: string, limit: string, month: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const existing = await db.select().from(budgets).where(
+    and(eq(budgets.userId, userId), eq(budgets.category, category), eq(budgets.month, month))
+  ).limit(1);
+
+  if (existing.length > 0) {
+    return db.update(budgets).set({ limit }).where(
+      and(eq(budgets.userId, userId), eq(budgets.category, category), eq(budgets.month, month))
+    );
+  }
+
+  return db.insert(budgets).values({ userId, category, limit, month });
+}
+
+// Savings goals queries
+export async function getUserSavingsGoals(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(savingsGoals).where(eq(savingsGoals.userId, userId)).orderBy(desc(savingsGoals.createdAt));
+}
+
+export async function createSavingsGoal(userId: number, name: string, targetAmount: string, deadline?: Date, description?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.insert(savingsGoals).values({ userId, name, targetAmount, deadline, description });
+}
+
+export async function updateSavingsGoal(id: number, userId: number, currentAmount: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.update(savingsGoals).set({ currentAmount }).where(
+    and(eq(savingsGoals.id, id), eq(savingsGoals.userId, userId))
+  );
+}
+
+// Income records queries
+export async function getUserIncomeRecords(userId: number, startDate?: Date, endDate?: Date) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [eq(incomeRecords.userId, userId)];
+  
+  if (startDate) {
+    conditions.push(gte(incomeRecords.date, startDate));
+  }
+  if (endDate) {
+    conditions.push(lte(incomeRecords.date, endDate));
+  }
+
+  return db.select().from(incomeRecords).where(and(...conditions)).orderBy(desc(incomeRecords.date));
+}
+
+export async function createIncomeRecord(userId: number, amount: string, source?: string, date?: Date, notes?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.insert(incomeRecords).values({ userId, amount, source, date: date || new Date(), notes });
+}
+
+// Monthly summaries queries
+export async function getMonthlySummary(userId: number, month: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db.select().from(monthlySummaries).where(
+    and(eq(monthlySummaries.userId, userId), eq(monthlySummaries.month, month))
+  ).limit(1);
+
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function createMonthlySummary(userId: number, month: string, summary: string, totalIncome?: string, totalExpenses?: string, savingsAmount?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.insert(monthlySummaries).values({ userId, month, summary, totalIncome, totalExpenses, savingsAmount });
+}

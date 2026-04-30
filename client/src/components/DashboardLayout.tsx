@@ -27,20 +27,22 @@ import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
-const menuItems = [
-  { icon: LayoutDashboard, label: "Page 1", path: "/" },
-  { icon: Users, label: "Page 2", path: "/some-path" },
-];
-
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
 const DEFAULT_WIDTH = 280;
 const MIN_WIDTH = 200;
 const MAX_WIDTH = 480;
 
+const defaultMenuItems = [
+  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+  { icon: Users, label: "Users", path: "/users" },
+];
+
 export default function DashboardLayout({
   children,
+  navItems,
 }: {
   children: React.ReactNode;
+  navItems?: Array<{ label: string; path: string; icon?: React.ComponentType<{ className?: string }> }>;
 }) {
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
@@ -84,13 +86,11 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider
-      style={
-        {
-          "--sidebar-width": `${sidebarWidth}px`,
-        } as CSSProperties
-      }
+      style={{
+        "--sidebar-width": `${sidebarWidth}px`,
+      } as CSSProperties}
     >
-      <DashboardLayoutContent setSidebarWidth={setSidebarWidth}>
+      <DashboardLayoutContent setSidebarWidth={setSidebarWidth} navItems={navItems}>
         {children}
       </DashboardLayoutContent>
     </SidebarProvider>
@@ -100,11 +100,13 @@ export default function DashboardLayout({
 type DashboardLayoutContentProps = {
   children: React.ReactNode;
   setSidebarWidth: (width: number) => void;
+  navItems?: Array<{ label: string; path: string; icon?: React.ComponentType<{ className?: string }> }>;
 };
 
 function DashboardLayoutContent({
   children,
   setSidebarWidth,
+  navItems,
 }: DashboardLayoutContentProps) {
   const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
@@ -112,6 +114,10 @@ function DashboardLayoutContent({
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const menuItems = navItems ? navItems.map((item, idx) => ({
+    ...item,
+    icon: item.icon || (idx === 0 ? LayoutDashboard : Users),
+  })) : defaultMenuItems;
   const activeMenuItem = menuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
 

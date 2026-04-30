@@ -1,31 +1,86 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
 import { getLoginUrl } from "@/const";
-import { Streamdown } from 'streamdown';
+import { useLocation } from "wouter";
+import DashboardLayout from "@/components/DashboardLayout";
+import Dashboard from "./Dashboard";
+import ExpenseHistory from "./ExpenseHistory";
+import BudgetTracker from "./BudgetTracker";
+import SavingsGoals from "./SavingsGoals";
+import IncomeOrganizer from "./IncomeOrganizer";
+import FinancialAdvisor from "./FinancialAdvisor";
+import DataExport from "./DataExport";
+import SavingsRoadmap from "./SavingsRoadmap";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
- */
 export default function Home() {
-  // The userAuth hooks provides authentication state
-  // To implement login/logout functionality, simply call logout() or redirect to getLoginUrl()
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
+  const { user, loading, isAuthenticated } = useAuth();
+  const [location] = useLocation();
 
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <h1 className="text-4xl font-bold text-white mb-4">Finance Agent</h1>
+          <p className="text-slate-300 mb-8 text-lg">Take control of your finances with AI-powered insights and personalized guidance.</p>
+          <Button asChild size="lg" className="w-full">
+            <a href={getLoginUrl()}>
+              Sign in with Manus
+            </a>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Render dashboard with navigation
+  const navItems = [
+    { label: "Dashboard", path: "/" },
+    { label: "Expenses", path: "/expenses" },
+    { label: "Budgets", path: "/budgets" },
+    { label: "Savings Goals", path: "/savings" },
+    { label: "Roadmap", path: "/roadmap" },
+    { label: "Income", path: "/income" },
+    { label: "AI Advisor", path: "/advisor" },
+    { label: "Export", path: "/export" },
+  ];
+
+  const renderContent = () => {
+    switch (location) {
+      case "/":
+        return <Dashboard />;
+      case "/expenses":
+        return <ExpenseHistory />;
+      case "/budgets":
+        return <BudgetTracker />;
+      case "/savings":
+        return <SavingsGoals />;
+      case "/roadmap":
+        return <SavingsRoadmap />;
+      case "/income":
+        return <IncomeOrganizer />;
+      case "/advisor":
+        return <FinancialAdvisor />;
+      case "/export":
+        return <DataExport />;
+      default:
+        return <Dashboard />;
+    }
+  };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
-    </div>
+    <DashboardLayout navItems={navItems}>
+      {renderContent()}
+    </DashboardLayout>
   );
 }
