@@ -167,6 +167,132 @@ Provide a concise, professional summary of the user's financial performance this
       }),
   }),
 
+  bankImport: router({
+    getMerchantRules: protectedProcedure.query(async ({ ctx }) => {
+      return db.getUserMerchantRules(ctx.user.id);
+    }),
+
+    categorizeTransactions: protectedProcedure
+      .input(z.object({
+        transactions: z.array(z.object({
+          date: z.string(),
+          description: z.string(),
+          amount: z.string(),
+        })),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        let rules: any[] = [];
+        try {
+          rules = await db.getUserMerchantRules(ctx.user.id);
+        } catch (e) {
+          // Table might not exist yet, continue without rules
+          rules = [];
+        }
+
+        // Apply merchant rules first
+        const categorizedByRules = input.transactions.map((tx: any) => {
+          const matchedRule = rules.find((rule: any) =>
+            tx.description.toUpperCase().includes(rule.merchantKeyword.toUpperCase())
+          );
+          return {
+            ...tx,
+            category: matchedRule?.category || null,
+          };
+        });
+
+        // Get transactions that need AI categorization
+        const needsAI = categorizedByRules.filter((tx: any) => !tx.category);
+
+        if (needsAI.length === 0) {
+          return categorizedByRules.map((tx: any) => ({
+            date: tx.date,
+            description: tx.description,
+            amount: tx.amount,
+            category: tx.category || "other",
+          }));
+        }
+
+        // Use AI to categorize remaining transactions
+        const prompt = `Categorize these bank transactions into one of these categories: Vehicle & Fuel, Business Supplies & Equipment, Marketing & Advertising, Subcontractors & Labor, Food & Personal, Subscriptions, Home & Family, Tax & Savings, Other.
+
+Transactions:
+${needsAI.map((tx: any) => `- ${tx.description} ($${tx.amount})`).join('\n')}
+
+Respond with a JSON array where each object has: description (original), category (one of the above).`;
+
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: "You are a financial categorization expert. Always respond with valid JSON array.",
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+        });
+
+        const content = response.choices[0]?.message.content;
+        if (!content || typeof content !== 'string') {
+          throw new Error("Failed to categorize transactions");
+        }
+
+        try {
+          const cleanContent = content
+            .replace(/^```json\s*/i, '')
+            .replace(/^```\s*/i, '')
+            .replace(/```\s*$/i, '')
+            .trim();
+
+          const aiCategories = JSON.parse(cleanContent);
+          const categoryMap = new Map(aiCategories.map((item: any) => [item.description, item.category]));
+
+          return categorizedByRules.map((tx: any) => ({
+            date: tx.date,
+            description: tx.description,
+            amount: tx.amount,
+            category: tx.category || categoryMap.get(tx.description) || "other",
+          }));
+        } catch (e) {
+          return categorizedByRules.map((tx: any) => ({
+            date: tx.date,
+            description: tx.description,
+            amount: tx.amount,
+            category: tx.category || "other",
+          }));
+        }
+      }),
+
+    saveMerchantRule: protectedProcedure
+      .input(z.object({ merchantKeyword: z.string(), category: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        return db.saveMerchantRule(ctx.user.id, input.merchantKeyword, input.category);
+      }),
+
+    importTransactions: protectedProcedure
+      .input(z.array(z.object({
+        date: z.string(),
+        description: z.string(),
+        amount: z.string(),
+        category: z.string(),
+      })))
+      .mutation(async ({ ctx, input }) => {
+        const results = [];
+        for (const tx of input) {
+          const result = await db.createExpense(
+            ctx.user.id,
+            tx.amount,
+            tx.category,
+            tx.description,
+            new Date(tx.date)
+          );
+          results.push(result);
+        }
+        return { imported: results.length, total: input.length };
+      }),
+  }),
+
   advisor: router({
     analyze: protectedProcedure
       .input(z.object({ decision: z.string() }))

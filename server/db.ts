@@ -1,6 +1,6 @@
 import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, expenses, budgets, savingsGoals, incomeRecords, monthlySummaries } from "../drizzle/schema";
+import { InsertUser, users, expenses, budgets, savingsGoals, incomeRecords, monthlySummaries, merchantRules } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -271,4 +271,42 @@ export async function createMonthlySummary(userId: number, month: string, summar
   if (!db) throw new Error("Database not available");
 
   return db.insert(monthlySummaries).values({ userId, month, summary, totalIncome, totalExpenses, savingsAmount });
+}
+
+
+// Merchant rules queries
+export async function getUserMerchantRules(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(merchantRules).where(eq(merchantRules.userId, userId));
+}
+
+export async function saveMerchantRule(userId: number, merchantKeyword: string, category: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Check if rule already exists
+  const existing = await db.select().from(merchantRules).where(
+    and(eq(merchantRules.userId, userId), eq(merchantRules.merchantKeyword, merchantKeyword))
+  ).limit(1);
+
+  if (existing.length > 0) {
+    // Update existing rule
+    return db.update(merchantRules).set({ category }).where(
+      and(eq(merchantRules.userId, userId), eq(merchantRules.merchantKeyword, merchantKeyword))
+    );
+  }
+
+  // Create new rule
+  return db.insert(merchantRules).values({ userId, merchantKeyword, category });
+}
+
+export async function deleteMerchantRule(userId: number, ruleId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.delete(merchantRules).where(
+    and(eq(merchantRules.id, ruleId), eq(merchantRules.userId, userId))
+  );
 }

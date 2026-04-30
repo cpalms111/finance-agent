@@ -114,3 +114,21 @@ export const monthlySummaries = mysqlTable("monthlySummaries", {
 
 export type MonthlySummary = typeof monthlySummaries.$inferSelect;
 export type InsertMonthlySummary = typeof monthlySummaries.$inferInsert;
+
+/**
+ * Merchant rules table.
+ * Stores learned categorization rules based on merchant keywords.
+ * When a user manually changes a transaction category, we save the merchant keyword and category.
+ * Future transactions with matching keywords are automatically categorized.
+ */
+export const merchantRules = mysqlTable("merchantRules", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  merchantKeyword: varchar("merchantKeyword", { length: 255 }).notNull(), // e.g., "SHELL", "STARBUCKS"
+  category: varchar("category", { length: 64 }).notNull(), // e.g., "vehicle_fuel", "food"
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MerchantRule = typeof merchantRules.$inferSelect;
+export type InsertMerchantRule = typeof merchantRules.$inferInsert;

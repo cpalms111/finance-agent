@@ -11,6 +11,7 @@ import IncomeOrganizer from "./IncomeOrganizer";
 import FinancialAdvisor from "./FinancialAdvisor";
 import DataExport from "./DataExport";
 import SavingsRoadmap from "./SavingsRoadmap";
+import BankImport from "./BankImport";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -47,6 +48,7 @@ export default function Home() {
   const navItems = [
     { label: "Dashboard", path: "/" },
     { label: "Expenses", path: "/expenses" },
+    { label: "Import Bank", path: "/import" },
     { label: "Budgets", path: "/budgets" },
     { label: "Savings Goals", path: "/savings" },
     { label: "Roadmap", path: "/roadmap" },
@@ -61,6 +63,8 @@ export default function Home() {
         return <Dashboard />;
       case "/expenses":
         return <ExpenseHistory />;
+      case "/import":
+        return <BankImport />;
       case "/budgets":
         return <BudgetTracker />;
       case "/savings":

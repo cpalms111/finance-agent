@@ -15,6 +15,13 @@
       "when": 1777511342169,
       "tag": "0001_even_george_stacy",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1777525201450,
+      "tag": "0002_famous_midnight",
+      "breakpoints": true
     }
   ]
 }

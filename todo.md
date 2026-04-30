@@ -78,3 +78,43 @@
 - [x] UI polished and responsive with premium theme
 - [x] All tests passing (12/12 tests)
 - [x] Ready for deployment
+
+
+## Bank Statement Import Feature (NEW)
+
+### Database
+- [ ] Add merchantRules table to schema
+- [ ] Generate and apply database migration
+
+### Backend API
+- [ ] Add tRPC procedure to parse CSV and extract transactions
+- [ ] Add tRPC procedure to get saved merchant rules
+- [ ] Add tRPC procedure to save merchant rule (when user changes category)
+- [ ] Add tRPC procedure to categorize transactions with AI (with merchant rules applied first)
+- [ ] Add tRPC procedure to import transactions to expenses table
+
+### Frontend - Import Page
+- [ ] Create BankImport.tsx page component
+- [ ] Add "Import Bank Statement" button to Expenses page
+- [ ] Build CSV upload area (drag & drop + file browser)
+- [ ] Accept Wells Fargo and generic CSV formats
+
+### Frontend - Review Screen
+- [ ] Display review table with Date, Description, Amount, Category
+- [ ] Add category dropdown for each transaction (pre-filled with AI suggestion)
+- [ ] Add "Select All" / "Deselect All" checkboxes
+- [ ] Add checkbox for each transaction to include/exclude from import
+- [ ] Show transaction count and import button
+
+### Frontend - Integration
+- [ ] Call AI to categorize transactions
+- [ ] Apply saved merchant rules before AI categorization
+- [ ] Handle category changes and save as merchant rules
+- [ ] Import selected transactions to database
+- [ ] Redirect to Expenses page after successful import
+
+### Testing
+- [ ] Test CSV parsing with Wells Fargo format
+- [ ] Test AI categorization accuracy
+- [ ] Test merchant rule saving and application
+- [ ] Test transaction import and database updates
